@@ -6,7 +6,7 @@ import edge_tts
 from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import HTMLResponse, StreamingResponse
+from fastapi.responses import HTMLResponse, StreamingResponse, FileResponse
 from pydantic import BaseModel
 from groq import Groq
 
@@ -54,9 +54,19 @@ class TTSPayload(BaseModel):
 async def serve_hud():
     path = os.path.join(WEB_DIR, "index.html")
     if not os.path.exists(path):
-        return HTMLResponse("<h3>A.R.I.S. HUD Missing</h3>")
+        return HTMLResponse("<h3>A.R.I.D.A.Y. / A.R.I.S. HUD Missing</h3>")
     with open(path, "r", encoding="utf-8") as f:
         return HTMLResponse(f.read())
+
+
+@app.get("/style.css")
+async def serve_css():
+    return FileResponse(os.path.join(WEB_DIR, "style.css"), media_type="text/css")
+
+
+@app.get("/app.js")
+async def serve_js():
+    return FileResponse(os.path.join(WEB_DIR, "app.js"), media_type="application/javascript")
 
 
 @app.get("/api/nodes/status")
