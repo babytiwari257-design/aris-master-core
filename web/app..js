@@ -1,7 +1,9 @@
 let voiceEnabled = true;
 let activeAudio = null;
+let isSpeaking = false;
+let themeIdx = 0;
+const themes = ["", "theme-nvg", "theme-stark"];
 
-// Elements
 const feed = document.getElementById("feed");
 const cmdInput = document.getElementById("cmdInput");
 const sendBtn = document.getElementById("sendBtn");
@@ -10,43 +12,77 @@ const ttsToggle = document.getElementById("ttsToggle");
 const themeToggle = document.getElementById("themeToggle");
 const sosBtn = document.getElementById("sosBtn");
 const voicePicker = document.getElementById("voicePicker");
+const reactorStage = document.getElementById("reactorStage");
+const coreStatus = document.getElementById("coreStatus");
 
-// Toggle Natural Voice Output
+// Live Digital HUD Clock
+setInterval(() => {
+  const el = document.getElementById("hudClock");
+  if (el) el.textContent = new Date().toLocaleTimeString("en-IN", { hour12: false });
+}, 1000);
+
+// 3-Mode Hologram Theme Switcher (JARVIS Cyan -> NVG Green -> Stark Gold/Red)
+themeToggle.addEventListener("click", () => {
+  themeIdx = (themeIdx + 1) % themes.length;
+  document.body.className = themes[themeIdx];
+});
+
+// Audio Toggle
 ttsToggle.addEventListener("click", () => {
   voiceEnabled = !voiceEnabled;
-  ttsToggle.textContent = voiceEnabled ? "🔊 VOICE: ON" : "🔇 VOICE: OFF";
+  ttsToggle.textContent = voiceEnabled ? "🔊 AUDIO: LIVE" : "🔇 AUDIO: MUTE";
   ttsToggle.classList.toggle("active", voiceEnabled);
   if (!voiceEnabled && activeAudio) {
     activeAudio.pause();
-    activeAudio = null;
+    setSpeakingState(false);
   }
 });
 
-// Toggle NVG Green / Amber Tactical Theme
-themeToggle.addEventListener("click", () => {
-  document.body.classList.toggle("amber-mode");
-});
-
-// Visual SOS Beacon Flasher
+// SOS Flasher
 sosBtn.addEventListener("click", () => {
-  let count = 0;
-  const flash = setInterval(() => {
-    document.body.style.background = count % 2 === 0 ? "#ffffff" : "";
-    count++;
-    if (count > 10) {
-      clearInterval(flash);
-      document.body.style.background = "";
-    }
-  }, 200);
+  let c = 0;
+  const t = setInterval(() => {
+    document.body.style.background = c % 2 === 0 ? "#ffffff" : "";
+    c++;
+    if (c > 10) { clearInterval(t); document.body.style.background = ""; }
+  }, 190);
 });
 
-// Play Real Human Neural Voice from /api/tts
+function setSpeakingState(state) {
+  isSpeaking = state;
+  reactorStage.classList.toggle("speaking", state);
+  coreStatus.textContent = state ? "SPEAKING" : "A.R.I.S.";
+}
+
+// Lightweight 60fps Canvas Voice Waveform
+const canvas = document.getElementById("voiceWave");
+const ctx = canvas.getContext("2d");
+let phase = 0;
+
+function drawWave() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  const accent = getComputedStyle(document.body).getPropertyValue("--accent").trim() || "#00f0ff";
+  ctx.strokeStyle = accent;
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+
+  const amp = isSpeaking ? 22 : 3;
+  for (let x = 0; x < canvas.width; x += 4) {
+    const env = Math.sin((x / canvas.width) * Math.PI);
+    const y = canvas.height / 2 + Math.sin(x * 0.06 + phase) * amp * env;
+    if (x === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
+  }
+  ctx.stroke();
+  phase += isSpeaking ? 0.28 : 0.06;
+  requestAnimationFrame(drawWave);
+}
+drawWave();
+
+// Neural Voice Output
 async function speakHinglish(text) {
   if (!voiceEnabled || !text) return;
-  if (activeAudio) {
-    activeAudio.pause();
-    activeAudio = null;
-  }
+  if (activeAudio) activeAudio.pause();
   try {
     const res = await fetch("/api/tts", {
       method: "POST",
@@ -56,29 +92,36 @@ async function speakHinglish(text) {
     if (!res.ok) return;
     const blob = await res.blob();
     activeAudio = new Audio(URL.createObjectURL(blob));
+    activeAudio.onplay = () => setSpeakingState(true);
+    activeAudio.onended = () => setSpeakingState(false);
+    activeAudio.onerror = () => setSpeakingState(false);
     activeAudio.play();
-  } catch (err) {
-    console.warn("TTS link offline:", err);
+  } catch (e) {
+    setSpeakingState(false);
   }
 }
 
-// Add Message Bubble to HUD
 function addBubble(who, text, routeLabel = "") {
   const div = document.createElement("div");
   div.className = `msg ${who}`;
   div.innerHTML =
-    (routeLabel ? `<div class="route-tag">⚡ ${routeLabel}</div>` : "") +
+    (routeLabel ? `<div class="route-tag">◈ ${routeLabel}</div>` : "") +
     text.replace(/</g, "&lt;").replace(/>/g, "&gt;");
   feed.appendChild(div);
   feed.scrollTop = feed.scrollHeight;
 }
 
-// Send Typed or Spoken Command to A.R.I.S. Master Core
+function quickCmd(txt) {
+  cmdInput.value = txt;
+  sendCommand();
+}
+
 async function sendCommand() {
   const prompt = cmdInput.value.trim();
   if (!prompt) return;
   cmdInput.value = "";
   addBubble("user", prompt);
+  coreStatus.textContent = "THINKING";
 
   try {
     const res = await fetch("/api/command", {
@@ -87,67 +130,57 @@ async function sendCommand() {
       body: JSON.stringify({ prompt })
     });
     const data = await res.json();
+    coreStatus.textContent = "A.R.I.S.";
     addBubble("aris", data.reply, data.routed_node);
     speakHinglish(data.reply);
-
-    if (data.open_url) {
-      window.open(data.open_url, "_blank");
-    }
-  } catch (err) {
-    addBubble(
-      "aris",
-      "Offline Tactical Mode active: Network weak hai Commander, par local survival aur Morse protocols ready hain.",
-      "OFFLINE CORE"
-    );
+    if (data.open_url) window.open(data.open_url, "_blank");
+  } catch (e) {
+    coreStatus.textContent = "OFFLINE";
+    addBubble("aris", "Tactical Offline Mode: Local protocols active.", "LOCAL CORE");
   }
 }
 
 sendBtn.addEventListener("click", sendCommand);
-cmdInput.addEventListener("keydown", (e) => {
-  if (e.key === "Enter") sendCommand();
-});
+cmdInput.addEventListener("keydown", (e) => { if (e.key === "Enter") sendCommand(); });
 
-// Speech-to-Text Mic Input (Hindi + English)
+// Mic Input
 const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
-let rec = null;
-
 if (SpeechRec) {
-  rec = new SpeechRec();
+  const rec = new SpeechRec();
   rec.lang = "en-IN";
-  rec.interimResults = false;
-
+  micBtn.addEventListener("click", () => {
+    micBtn.textContent = "🔴 LISTENING";
+    micBtn.classList.add("listening");
+    coreStatus.textContent = "MIC LIVE";
+    rec.start();
+  });
   rec.onresult = (e) => {
     cmdInput.value = e.results[0][0].transcript;
     sendCommand();
   };
-
   rec.onend = () => {
-    micBtn.textContent = "🎙️ SPEAK";
+    micBtn.textContent = "🎙️ VOICE";
     micBtn.classList.remove("listening");
+    if (!isSpeaking) coreStatus.textContent = "A.R.I.S.";
   };
 }
 
-micBtn.addEventListener("click", () => {
-  if (!rec) {
-    alert("Voice input ke liye Chrome ya Edge browser use karein.");
-    return;
-  }
-  micBtn.textContent = "🔴 LISTENING...";
-  micBtn.classList.add("listening");
-  rec.start();
-});
-
-// Live Health Ping for F.R.I.D.A.Y., OMEGA, A.L.P.H.A., TITAN
+// 4-Node Live Ping Matrix
 async function refreshNodeHealth() {
   try {
     const res = await fetch("/api/nodes/status");
     const data = await res.json();
-    Object.keys(data.nodes).forEach((key) => {
-      const dot = document.getElementById(`dot-${key}`);
-      if (dot) dot.classList.toggle("online", data.nodes[key].online);
+    Object.keys(data.nodes).forEach((k) => {
+      const online = data.nodes[k].online;
+      const pingEl = document.getElementById(`ping-${k}`);
+      const barEl = document.getElementById(`bar-${k}`);
+      if (pingEl) {
+        pingEl.textContent = online ? "ONLINE // LINKED" : "STANDBY";
+        pingEl.classList.toggle("online", online);
+      }
+      if (barEl) barEl.classList.toggle("online", online);
     });
-  } catch (err) {}
+  } catch (e) {}
 }
-
 refreshNodeHealth();
 setInterval(refreshNodeHealth, 30000);
