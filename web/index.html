@@ -3,98 +3,134 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>A.R.I.S. // Master Tactical Command OS</title>
+  <title>A.R.I.S. // STARK-OS HOLOGRAPHIC HUD</title>
   <link rel="stylesheet" href="/style.css" />
 </head>
 <body>
+  <div class="cyber-grid"></div>
 
-  <!-- TOP COMMAND HEADER -->
-  <header class="top-bar">
-    <div class="brand-wrap">
-      <div class="arc-core"></div>
+  <!-- TOP HOLOGRAPHIC HEADER -->
+  <header class="hud-header">
+    <div class="sys-id">
+      <span class="badge-live">ONLINE</span>
       <div>
-        <div class="brand">A.R.I.S. // MASTER COMMAND OS</div>
-        <div class="sub-tag">PYTHON • HTML • CSS • JS // 4-NODE TACTICAL ORCHESTRATOR</div>
+        <div class="hud-title">A.R.I.S. // MASTER OS</div>
+        <div class="hud-sub">NEURAL VOICE • TACTICAL RECON • 4-NODE MATRIX</div>
       </div>
     </div>
 
-    <div class="top-controls">
-      <select id="voicePicker" class="hud-btn">
-        <option value="hi-IN-MadhurNeural">VOICE: MADHUR (Hinglish Male)</option>
-        <option value="en-IN-PrabhatNeural">VOICE: PRABHAT (Jarvis IN)</option>
-        <option value="en-IN-NeerjaNeural">VOICE: NEERJA (F.R.I.D.A.Y. IN)</option>
+    <div class="hud-actions">
+      <select id="voicePicker" class="cyber-btn">
+        <option value="hi-IN-MadhurNeural">VOICE: MADHUR (HINGLISH)</option>
+        <option value="en-GB-RyanNeural">VOICE: J.A.R.V.I.S. (UK)</option>
+        <option value="en-IN-PrabhatNeural">VOICE: PRABHAT (IN MALE)</option>
+        <option value="en-IN-NeerjaNeural">VOICE: F.R.I.D.A.Y. (IN)</option>
       </select>
-      <button class="hud-btn active" id="ttsToggle">🔊 VOICE: ON</button>
-      <button class="hud-btn" id="themeToggle">🌓 NVG / AMBER</button>
-      <button class="hud-btn danger" id="sosBtn">🆘 SOS FLASH</button>
+      <button class="cyber-btn active" id="ttsToggle">🔊 AUDIO: LIVE</button>
+      <button class="cyber-btn" id="themeToggle">🎨 HUD THEME</button>
+      <button class="cyber-btn alert" id="sosBtn">⚠️ SOS BEACON</button>
     </div>
   </header>
 
-  <!-- 4 LINKED AI SYSTEMS BAR -->
-  <section class="nodes-bar">
-    <a class="node-card" href="https://friday-aris.onrender.com/" target="_blank">
-      <div>
-        <div class="node-title">F.R.I.D.A.Y.</div>
-        <div class="node-role">Encrypted Vault & Comms</div>
-      </div>
-      <div class="status-dot" id="dot-friday"></div>
-    </a>
-    <a class="node-card" href="https://project-omega-m1.onrender.com/" target="_blank">
-      <div>
-        <div class="node-title">OMEGA</div>
-        <div class="node-role">Deep Physics & Neural Core</div>
-      </div>
-      <div class="status-dot" id="dot-omega"></div>
-    </a>
-    <a class="node-card" href="https://alpha-aris.onrender.com/" target="_blank">
-      <div>
-        <div class="node-title">A.L.P.H.A.</div>
-        <div class="node-role">Live Sync & Video Rooms</div>
-      </div>
-      <div class="status-dot" id="dot-alpha"></div>
-    </a>
-    <a class="node-card" href="https://titan-aris.onrender.com/" target="_blank">
-      <div>
-        <div class="node-title">TITAN</div>
-        <div class="node-role">Defense & Heavy Compute</div>
-      </div>
-      <div class="status-dot" id="dot-titan"></div>
-    </a>
-  </section>
+  <!-- MAIN 3-COLUMN STARK COMMAND DECK -->
+  <main class="command-deck">
 
-  <!-- MAIN WORKSPACE -->
-  <main class="workspace">
-    <div class="chat-col">
+    <!-- LEFT: 4-NODE TELEMETRY MATRIX -->
+    <aside class="side-panel">
+      <div class="panel-header">◈ SUB-SYSTEM MATRIX</div>
+
+      <a class="node-tile" href="https://friday-aris.onrender.com/" target="_blank">
+        <div class="node-top">
+          <span class="node-name">F.R.I.D.A.Y.</span>
+          <span class="node-ping" id="ping-friday">SYNCING...</span>
+        </div>
+        <div class="node-desc">Encrypted Vault & Private Comms</div>
+        <div class="energy-bar"><div class="energy-fill" id="bar-friday"></div></div>
+      </a>
+
+      <a class="node-tile" href="https://project-omega-m1.onrender.com/" target="_blank">
+        <div class="node-top">
+          <span class="node-name">O.M.E.G.A.</span>
+          <span class="node-ping" id="ping-omega">SYNCING...</span>
+        </div>
+        <div class="node-desc">Deep Physics & Neural Core</div>
+        <div class="energy-bar"><div class="energy-fill" id="bar-omega"></div></div>
+      </a>
+
+      <a class="node-tile" href="https://alpha-aris.onrender.com/" target="_blank">
+        <div class="node-top">
+          <span class="node-name">A.L.P.H.A.</span>
+          <span class="node-ping" id="ping-alpha">SYNCING...</span>
+        </div>
+        <div class="node-desc">Real-Time P2P & Video Rooms</div>
+        <div class="energy-bar"><div class="energy-fill" id="bar-alpha"></div></div>
+      </a>
+
+      <a class="node-tile" href="https://titan-aris.onrender.com/" target="_blank">
+        <div class="node-top">
+          <span class="node-name">T.I.T.A.N.</span>
+          <span class="node-ping" id="ping-titan">SYNCING...</span>
+        </div>
+        <div class="node-desc">Heavy Compute & Defense Aux</div>
+        <div class="energy-bar"><div class="energy-fill" id="bar-titan"></div></div>
+      </a>
+
+      <div class="telemetry-card">
+        <div class="panel-header">◈ SYSTEM DIAGNOSTICS</div>
+        <div class="stat-row"><span>MEM FOOTPRINT</span><span class="glow-val">ULTRA-LITE (4GB SAFE)</span></div>
+        <div class="stat-row"><span>NEURAL ROUTER</span><span class="glow-val">GROQ + EDGE-TTS</span></div>
+        <div class="stat-row"><span>LOCAL CLOCK</span><span class="glow-val" id="hudClock">--:--:--</span></div>
+      </div>
+    </aside>
+
+    <!-- CENTER: ARC-REACTOR CORE + NEURAL FEED -->
+    <section class="center-core">
+      <!-- HOLOGRAPHIC REACTOR & LIVE VOICE WAVEFORM -->
+      <div class="reactor-stage" id="reactorStage">
+        <div class="ring ring-outer"></div>
+        <div class="ring ring-mid"></div>
+        <div class="ring ring-inner"></div>
+        <div class="core-center" id="coreStatus">A.R.I.S.</div>
+        <canvas id="voiceWave" width="320" height="70"></canvas>
+      </div>
+
+      <!-- HOLOGRAPHIC COMMS LOG -->
       <div class="feed" id="feed">
         <div class="msg aris">
-          <div class="route-tag">⚡ A.R.I.S. MODULAR CORE INITIALIZED</div>
-          Jai Hind Commander Mayank! Python, HTML, CSS aur JS engines sync ho chuke hain. Mic dabakar bolein ya neeche command type karein!
+          <div class="route-tag">◈ A.R.I.S. HOLOGRAPHIC CORE ONLINE</div>
+          Welcome back Commander Mayank. Sabhi 4 AI nodes aur Neural Voice matrix active hain. Mic dabakar bolein ya command type karein!
         </div>
       </div>
 
-      <!-- DUAL INPUT: VOICE + TYPE -->
+      <!-- DUAL COMMAND BAR -->
       <div class="composer">
-        <button class="mic-btn" id="micBtn">🎙️ SPEAK</button>
-        <input class="cmd-input" id="cmdInput" placeholder="Type command ya Mic dabakar Hindi/English mein bolein..." />
-        <button class="send-btn" id="sendBtn">EXECUTE</button>
+        <button class="mic-btn" id="micBtn">🎙️ VOICE</button>
+        <input class="cmd-input" id="cmdInput" placeholder="Enter tactical command or speak (@friday, @omega, @alpha, @titan)..." />
+        <button class="send-btn" id="sendBtn">ENGAGE ⚡</button>
       </div>
-    </div>
+    </section>
 
-    <aside class="tac-side">
-      <div class="tac-box">
-        <h4>📡 SMART NODE ROUTING</h4>
-        <p>• <b>"@friday ..."</b> → Private Vault<br>
-           • <b>"@omega ..."</b> → Deep Physics AI<br>
-           • <b>"@alpha ..."</b> → Live Video Sync<br>
-           • <b>"@titan ..."</b> → Defense Compute</p>
+    <!-- RIGHT: SOLDIER & TACTICAL PROTOCOLS -->
+    <aside class="side-panel right-panel">
+      <div class="panel-header">◈ COMMAND SHORTCUTS</div>
+      <div class="quick-grid">
+        <button class="q-chip" onclick="quickCmd('Give full tactical status of all 4 AI systems')">⚡ SYSTEM STATUS</button>
+        <button class="q-chip" onclick="quickCmd('@friday open secure vault')">🔐 @FRIDAY VAULT</button>
+        <button class="q-chip" onclick="quickCmd('@omega physics calculation mode')">⚛️ @OMEGA CORE</button>
+        <button class="q-chip" onclick="quickCmd('@alpha launch live sync room')">📡 @ALPHA SYNC</button>
+        <button class="q-chip" onclick="quickCmd('@titan defense support protocol')">🛡️ @TITAN OPS</button>
       </div>
-      <div class="tac-box">
-        <h4>🩺 FIELD SURVIVAL PROTOCOL</h4>
-        <p>• <b>Tourniquet:</b> Apply 2-3 inches above severe bleed.<br>
-           • <b>Morse SOS:</b> ••• ▬▬▬ •••<br>
-           • <b>System Load:</b> Optimized for 4GB RAM</p>
+
+      <div class="telemetry-card">
+        <div class="panel-header">◈ FIELD SURVIVAL INTEL</div>
+        <p class="intel-text">
+          • <b>HEMORRHAGE:</b> Tourniquet 2–3 in. above wound; note time.<br><br>
+          • <b>HYPOTHERMIA:</b> Ground insulation + dry core layers.<br><br>
+          • <b>MORSE SOS:</b> ••• ▬▬▬ ••• (3 Short, 3 Long, 3 Short)
+        </p>
       </div>
     </aside>
+
   </main>
 
   <script src="/app.js"></script>
