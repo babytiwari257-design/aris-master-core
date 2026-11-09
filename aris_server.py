@@ -12,7 +12,7 @@ from groq import Groq
 
 load_dotenv()
 
-app = FastAPI(title="A.R.I.S. // Master Tactical Command OS", version="1.0.0")
+app = FastAPI(title="A.R.I.S. // Master Tactical Command OS", version="2.0.0")
 
 app.add_middleware(
     CORSMiddleware,
@@ -29,7 +29,6 @@ os.makedirs(WEB_DIR, exist_ok=True)
 GROQ_API_KEY = os.environ.get("GROQ_API_KEY", "")
 client = Groq(api_key=GROQ_API_KEY) if GROQ_API_KEY else None
 
-# Connected Sub-Nodes (Old repos stay 100% untouched)
 NODES = {
     "friday": {"name": "F.R.I.D.A.Y.", "role": "Encrypted Vault & Comms", "url": "https://friday-aris.onrender.com/"},
     "omega": {"name": "OMEGA", "role": "Deep Neural & Physics Core", "url": "https://project-omega-m1.onrender.com/"},
@@ -37,7 +36,7 @@ NODES = {
     "titan": {"name": "TITAN", "role": "Heavy Compute & Defense Aux", "url": "https://titan-aris.onrender.com/"},
 }
 
-AI_MODELS = ["openai/gpt-oss-120b", "qwen/qwen3.8-27b", "openai/gpt-oss-20b"]
+AI_MODELS = ["llama-3.3-70b-versatile", "openai/gpt-oss-120b", "llama-3.1-8b-instant"]
 
 
 class CommandPayload(BaseModel):
@@ -50,23 +49,46 @@ class TTSPayload(BaseModel):
     voice: str = "hi-IN-MadhurNeural"
 
 
+def read_web_file(filename: str) -> str:
+    for folder in [WEB_DIR, BASE_DIR]:
+        p = os.path.join(folder, filename)
+        if os.path.exists(p):
+            with open(p, "r", encoding="utf-8") as f:
+                return f.read()
+    return ""
+
+
 @app.get("/", response_class=HTMLResponse)
 async def serve_hud():
-    path = os.path.join(WEB_DIR, "index.html")
-    if not os.path.exists(path):
-        return HTMLResponse("<h3>A.R.I.D.A.Y. / A.R.I.S. HUD Missing</h3>")
-    with open(path, "r", encoding="utf-8") as f:
-        return HTMLResponse(f.read())
+    html = read_web_file("index.html")
+    css = read_web_file("style.css")
+    js = read_web_file("app.js")
+
+    if not html:
+        return HTMLResponse("<h3>index.html not found in repo</h3>")
+
+    # Auto-inject CSS and JS directly into HTML so 404 never breaks buttons!
+    if css and '<link rel="stylesheet" href="/style.css" />' in html:
+        html = html.replace('<link rel="stylesheet" href="/style.css" />', f"<style>{css}</style>")
+    elif css and '<link rel="stylesheet" href="/style.css">' in html:
+        html = html.replace('<link rel="stylesheet" href="/style.css">', f"<style>{css}</style>")
+
+    if js and '<script src="/app.js"></script>' in html:
+        html = html.replace('<script src="/app.js"></script>', f"<script>{js}</script>")
+
+    return HTMLResponse(html)
 
 
 @app.get("/style.css")
 async def serve_css():
-    return FileResponse(os.path.join(WEB_DIR, "style.css"), media_type="text/css")
+    css = read_web_file("style.css")
+    return HTMLResponse(css, media_type="text/css")
 
 
 @app.get("/app.js")
 async def serve_js():
-    return FileResponse(os.path.join(WEB_DIR, "app.js"), media_type="application/javascript")
+    js = read_web_file("app.js")
+    return HTMLResponse(js, media_type="application/javascript")
 
 
 @app.get("/api/nodes/status")
@@ -107,7 +129,7 @@ async def process_aris_command(payload: CommandPayload):
 
     if not client:
         return {
-            "reply": "Commander, GROQ_API_KEY Render environment mein set nahi hai. Tactical offline mode active.",
+            "reply": "Commander, Render ke Environment Variables mein GROQ_API_KEY missing hai. Key add karte hi AI brain online ho jayega!",
             "routed_node": routed_node,
             "open_url": open_url,
         }
@@ -119,6 +141,7 @@ async def process_aris_command(payload: CommandPayload):
         "Keep answers concise, sharp, and ready to be spoken aloud without markdown symbols like asterisks or hashes."
     )
 
+    last_err = ""
     for model in AI_MODELS:
         try:
             res = client.chat.completions.create(
@@ -132,11 +155,12 @@ async def process_aris_command(payload: CommandPayload):
             )
             clean_reply = res.choices[0].message.content.replace("*", "").replace("#", "").strip()
             return {"reply": clean_reply, "routed_node": routed_node, "open_url": open_url}
-        except Exception:
+        except Exception as e:
+            last_err = str(e)
             continue
 
     return {
-        "reply": "Neural link momentarily busy hai Commander, dobara command dein.",
+        "reply": f"Groq API error aa raha hai Commander: {last_err[:120]}",
         "routed_node": routed_node,
         "open_url": open_url,
     }
