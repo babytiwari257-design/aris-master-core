@@ -1,0 +1,7 @@
+fastapi
+uvicorn[standard]
+groq
+edge-tts
+httpx
+pydantic
+python-dotenv
